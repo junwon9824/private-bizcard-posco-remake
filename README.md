@@ -201,6 +201,7 @@ PC,모바일 등 Teams를 이용 가능한 어떤 기기에서든 BizCard의 서
 ## 프로젝트 구성
 
 ### **아키텍쳐**
+![image](https://github.com/junwon9824/bizcard-posco/assets/42957005/2a8e09a3-88d0-434f-9fcf-29a8a5d2adca)
 
 ### **ERD**
 
