@@ -8,6 +8,7 @@ public class BusinesscardApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(BusinesscardApplication.class, args);
+        
     }
 
 }
