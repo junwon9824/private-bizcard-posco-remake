@@ -10,9 +10,9 @@ import lombok.*;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-@Table(name = "user", indexes = {
-        @Index(name = "idx_user_userId", columnList = "userId")
-})
+//@Table(name = "user", indexes = {
+//        @Index(name = "idx_name", columnList = "name")
+//})
 public class User extends BaseTimeEntity {
 
     @Id

@@ -16,6 +16,7 @@ import java.util.List;
 @ToString
 @AllArgsConstructor
 @NoArgsConstructor
+@Setter
 public class PrivateAlbum extends BaseTimeEntity {
 
     @Id

@@ -21,7 +21,10 @@ public class MycardController {
     //내카드 조회
     @GetMapping("/my-card/{user_id}")
     public ResponseEntity<MycardListResponseDto> getMycard(@PathVariable("user_id")Long userId){
+        long startTime = System.currentTimeMillis();
+
         MycardListResponseDto list =mycardService.getMycard(userId);
+
         return ResponseEntity.ok().body(MessageUtils.success(list).getDataBody());
     }
 }

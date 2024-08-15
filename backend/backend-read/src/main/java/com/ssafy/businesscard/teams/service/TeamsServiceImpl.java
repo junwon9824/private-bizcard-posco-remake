@@ -24,6 +24,10 @@ import com.ssafy.businesscard.user.entity.User;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -39,7 +43,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class TeamsServiceImpl implements TeamsService{
+public class TeamsServiceImpl implements TeamsService {
 
     private final TeamAlbumRepository teamAlbumRepository;
     private final TeamAlbumMemberRepository teamAlbumMemberRepository;
@@ -49,7 +53,7 @@ public class TeamsServiceImpl implements TeamsService{
 
     //팀 명함 목록 조회
     @Override
-    public List<TeamListResponseDto> getTeamList(Long userId){
+    public List<TeamListResponseDto> getTeamList(Long userId) {
         List<TeamMember> teamMembers = teamMemberRepository.findByUser_UserId(userId);
 
         List<TeamListResponseDto> dtos = teamMembers.stream()
@@ -69,24 +73,68 @@ public class TeamsServiceImpl implements TeamsService{
         return dtos;
     }
 
+    //팀 명함 상세 조회
+    @Override
+    public PrivateAlbumResponseDto getTeamAlbumDtail(Long teamAlbumId, Long cardId) {
+        Optional<TeamAlbumDetail> teamAlbumDetailOptional = teamAlbumDetailRepository.findByTeamAlbum_TeamAlbumIdAndBusinesscard_cardId(teamAlbumId, cardId);
+        if (teamAlbumDetailOptional.isPresent()) {
+            TeamAlbumDetail teamAlbumDetail = teamAlbumDetailOptional.get();
+//            Businesscard businesscard = teamAlbumDetail.getBusinesscard();
+            return teamsMapper.toDto(teamAlbumDetail);
+        } else {
+            throw new UserException(UserErrorCode.NO_CARD);
+        }
+    }
+
+    //엑셀로 내보내기용 팀 명함 목록조회
+    @Override
+    public List<PrivateAlbumResponseDto> getTeamAlbumAllList(Long teamAlbumId) {
+        List<TeamAlbumDetail> teamAlbumDetails = teamAlbumDetailRepository.findByTeamAlbum_TeamAlbumId(teamAlbumId);
+        List<Businesscard> businesscards = teamAlbumDetails.stream().map(bc -> bc.getBusinesscard()).toList();
+        List<PrivateAlbumResponseDto> dtos = businesscards.stream().map(teamsMapper::toDto).toList();
+        return dtos;
+    }
+
+
     //팀 내 명함 조회
     @Override
-    public List<PrivateAlbumResponseDto> getTeamAlbumList(Long teamAlbumId, int page){
+    @Cacheable(value = "teamAlbumCache", key = "#teamAlbumId + '-' + #page")
+    public List<PrivateAlbumResponseDto> getTeamAlbumList(Long teamAlbumId, int page) {
+        log.info("Fetching data from the database for teamAlbumId: {}, page: {}", teamAlbumId, page);
+
         int size = 12;
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("businesscard.cardId").descending());
         Page<TeamAlbumDetail> teamAlbumPage = teamAlbumDetailRepository.findByTeamAlbum_TeamAlbumId(teamAlbumId, pageable);
+        log.info("teamalbumpageeee   " + teamAlbumPage);
         List<PrivateAlbumResponseDto> dtos = teamAlbumPage.stream()
                 .map(bc -> bc.getBusinesscard())
                 .map(teamsMapper::toDto).toList();
         return dtos;
+
+    }
+
+    @Override
+     public List<PrivateAlbumResponseDto> getTeamAlbumListNoCache(Long teamAlbumId, int page) {
+        log.info("Fetching data from the database for teamAlbumId: {}, page: {}", teamAlbumId, page);
+
+        int size = 12;
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("businesscard.cardId").descending());
+        Page<TeamAlbumDetail> teamAlbumPage = teamAlbumDetailRepository.findByTeamAlbum_TeamAlbumId(teamAlbumId, pageable);
+        log.info("team   " + teamAlbumPage);
+        List<PrivateAlbumResponseDto> dtos = teamAlbumPage.stream()
+                .map(bc -> bc.getBusinesscard())
+                .map(teamsMapper::toDto).toList();
+        return dtos;
+
     }
 
     //명함지갑에서 목록조회 정렬(이름, 회사, 최신)
     @Override
-    public List<PrivateAlbumResponseDto> getTeamAlbumListSort(Long teamAlbumId, int page, String sort){
+    public List<PrivateAlbumResponseDto> getTeamAlbumListSort(Long teamAlbumId, int page, String sort) {
         int size = 12;
-        if(sort.equals("이름순")){
+        if (sort.equals("이름순")) {
 
             Pageable pageable = PageRequest.of(page, size, Sort.by("businesscard.name"));
             Page<TeamAlbumDetail> teamAlbumPage = teamAlbumDetailRepository.findByTeamAlbum_TeamAlbumId(teamAlbumId, pageable);
@@ -102,7 +150,7 @@ public class TeamsServiceImpl implements TeamsService{
             List<PrivateAlbumResponseDto> dtos = businesscards.stream().map(teamsMapper::toDto).toList();
             return dtos;
 
-        }else {
+        } else {
 
             Pageable pageable = PageRequest.of(page, size, Sort.by("businesscard.cardId").descending());
             Page<TeamAlbumDetail> teamAlbumPage = teamAlbumDetailRepository.findByTeamAlbum_TeamAlbumId(teamAlbumId, pageable);
@@ -114,7 +162,7 @@ public class TeamsServiceImpl implements TeamsService{
 
     //팀의 팀원 조회
     @Override
-    public List<TeamMemberListResponseDto> getTeamMemberList(Long userId, Long teamAlbumId){
+    public List<TeamMemberListResponseDto> getTeamMemberList(Long userId, Long teamAlbumId) {
         List<TeamMemberListResponseDto> dtos = new ArrayList<>();
         //me
         TeamMember me = teamMemberRepository.findByUser_userIdAndTeamAlbum_TeamAlbumId(userId, teamAlbumId);
@@ -129,31 +177,10 @@ public class TeamsServiceImpl implements TeamsService{
         return dtos;
     }
 
-    //팀 명함 상세 조회
-    @Override
-    public PrivateAlbumResponseDto getTeamAlbumDtail(Long teamAlbumId, Long cardId){
-        Optional<TeamAlbumDetail> teamAlbumDetailOptional  = teamAlbumDetailRepository.findByTeamAlbum_TeamAlbumIdAndBusinesscard_cardId(teamAlbumId, cardId);
-        if(teamAlbumDetailOptional.isPresent()){
-            TeamAlbumDetail teamAlbumDetail = teamAlbumDetailOptional.get();
-//            Businesscard businesscard = teamAlbumDetail.getBusinesscard();
-            return teamsMapper.toDto(teamAlbumDetail);
-        }else{
-            throw new UserException(UserErrorCode.NO_CARD);
-        }
-    }
-
-    //엑셀로 내보내기용 팀 명함 목록조회
-    @Override
-    public List<PrivateAlbumResponseDto> getTeamAlbumAllList(Long teamAlbumId){
-        List<TeamAlbumDetail> teamAlbumDetails = teamAlbumDetailRepository.findByTeamAlbum_TeamAlbumId(teamAlbumId);
-        List<Businesscard> businesscards = teamAlbumDetails.stream().map(bc -> bc.getBusinesscard()).toList();
-        List<PrivateAlbumResponseDto> dtos = businesscards.stream().map(teamsMapper::toDto).toList();
-        return dtos;
-    }
 
     //필터 목록 조회
     @Override
-    public List<FilterListResponseDto> getFilter(Long teamsAlbumDetailId){
+    public List<FilterListResponseDto> getFilter(Long teamsAlbumDetailId) {
         List<TeamAlbumMember> teamAlbumMembers = teamAlbumMemberRepository.findByTeamAlbumDetail_TeamAlbumDetailId(teamsAlbumDetailId);
         List<Filter> filters = teamAlbumMembers.stream().map(filter -> filter.getFilter()).toList();
         List<FilterListResponseDto> dtos = filters.stream().map(teamsMapper::toDto).toList();
@@ -162,10 +189,10 @@ public class TeamsServiceImpl implements TeamsService{
 
     //필터 별 명함 조회
     @Override
-    public FilterCardResponseDto getFilterCard(Long teamAlbumId, Long filterId){
+    public FilterCardResponseDto getFilterCard(Long teamAlbumId, Long filterId) {
         List<TeamAlbumMember> members = teamAlbumMemberRepository.findByTeamAlbum_TeamAlbumIdAndFilter_filterId(teamAlbumId, filterId);
-        List<TeamAlbumDetail> teamAlbumDetails = members.stream().map(details ->details.getTeamAlbumDetail()).toList();
-        List<Businesscard> businesscards = teamAlbumDetails.stream().map(bc ->bc.getBusinesscard()).toList();
+        List<TeamAlbumDetail> teamAlbumDetails = members.stream().map(details -> details.getTeamAlbumDetail()).toList();
+        List<Businesscard> businesscards = teamAlbumDetails.stream().map(bc -> bc.getBusinesscard()).toList();
         List<PrivateAlbumResponseDto> list = businesscards.stream().map(teamsMapper::toDto).toList();
         FilterCardResponseDto dto = new FilterCardResponseDto(filterId, list);
         return dto;
@@ -174,7 +201,7 @@ public class TeamsServiceImpl implements TeamsService{
     //상세보기에서 명함마다 필터 뭐있는지 조회
     @Override
     @Transactional
-    public List<FilterListResponseDto> getAlbumDtailFilter(Long teamAlbumId, Long cardId){
+    public List<FilterListResponseDto> getAlbumDtailFilter(Long teamAlbumId, Long cardId) {
         Optional<TeamAlbumDetail> teamAlbumDetails = teamAlbumDetailRepository.findByTeamAlbum_TeamAlbumIdAndBusinesscard_cardId(teamAlbumId, cardId);
         TeamAlbumDetail teamAlbumDetail = teamAlbumDetails.get();
         List<TeamAlbumMember> teamAlbumMembers = teamAlbumDetail.getTeamAlbumMemberList();

@@ -39,6 +39,15 @@ public class TeamsController {
         return ResponseEntity.ok().body(MessageUtils.success(dtos));
     }
 
+    //팀 내 명함 조회
+    @GetMapping("/teams/list/{team_album_id}/{page}/nocache")
+    public ResponseEntity<?> getTeamAlbumListNoCache(
+            @PathVariable("team_album_id")Long teamAlbumId,
+            @PathVariable("page")int page){
+        List<PrivateAlbumResponseDto> dtos = teamsService.getTeamAlbumListNoCache(teamAlbumId, page);
+        return ResponseEntity.ok().body(MessageUtils.success(dtos));
+    }
+
     //팀 명함에서 목록조회 정렬(이름, 회사, 최신)
     @GetMapping("/teams/list/{team_album_id}/{page}/sort")
     public ResponseEntity<?> getTeamAlbumListSort(

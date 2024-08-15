@@ -31,6 +31,8 @@ public class MycardServiceImpl implements MycardService{
     //내 명함탭
     @Override
     public MycardListResponseDto getMycard(Long userId){
+        long startTime = System.currentTimeMillis();
+
         List<MycardResponseDto> list = searchMycard(userId);
         MycardResponseDto front = null;
         MycardResponseDto back = null;
@@ -45,6 +47,9 @@ public class MycardServiceImpl implements MycardService{
 
         List<PrivateAlbumResponseDto> privateAlbumResponseDtos = privateAlbumService.getAlbumList(userId, 0);
         MycardListResponseDto mycardListResponseDto = new MycardListResponseDto(userId, front, back, privateAlbumResponseDtos);
+        long endTime = System.currentTimeMillis();
+
+        System.out.println("인덱스 추가 전 소요 시간: " + (endTime - startTime) + "ms");
 
         return mycardListResponseDto;
     }

@@ -197,7 +197,7 @@ public class UserServiceImpl implements UserService{
     public PrivateAlbumResponseDto shareCard(Long cardId, String email){
         Optional<Businesscard> businesscard = businesscardRepository.findById(cardId);
         PrivateAlbumResponseDto dto = userMapper.toDto(businesscard.get());
-        if(dto.email().equals(email)){
+        if(dto.getEmail().equals(email)){
             return dto;
         }
         else{

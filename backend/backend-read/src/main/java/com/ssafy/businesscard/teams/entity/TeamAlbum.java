@@ -13,6 +13,7 @@ import java.util.List;
 @ToString
 @AllArgsConstructor
 @NoArgsConstructor
+@Setter
 public class TeamAlbum {
 
     @Id

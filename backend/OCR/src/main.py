@@ -40,14 +40,14 @@ with open('src/secrets.json', 'r') as f:
 
 # CLIENT_ID = secrets["CLIENT_ID"]  # Your Client ID
 CLIENT_SECRET = secrets["CLIENT_SECRET"]  # Your Client Secret
-API_URL = secrets["API_URL"]  
- 
+API_URL = secrets["API_URL"]
  
 print('apiurl   '+API_URL)
 print('secret   '+CLIENT_SECRET)
 
 
 ################################################################
+
 def reorderPts(pts): # 꼭지점 순서 정렬
     idx = np.lexsort((pts[:, 1], pts[:, 0]))  # 칼럼0 -> 칼럼1 순으로 정렬한 인덱스를 반환
     pts = pts[idx]  # x좌표로 정렬
@@ -59,6 +59,7 @@ def reorderPts(pts): # 꼭지점 순서 정렬
         pts[[2, 3]] = pts[[3, 2]] # 스와핑
 
     return pts
+
 
 def detect_and_save_business_card(image):
     # 이미지를 numpy 배열로 변환
