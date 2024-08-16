@@ -23,6 +23,7 @@ import com.ssafy.businesscard.global.exception.UserException;
 import com.ssafy.businesscard.global.s3.servcie.AmazonS3Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -45,6 +46,8 @@ public class TeamAlbumCardServiceImpl implements TeamAlbumCardService {
     // 팀 명함지갑에 명함 등록
     @Override
     @Transactional
+    @CacheEvict(value = "teamAlbumCache", key = "#teamAlbumId")
+
     public void regist(Long userId, Long teamAlbumId, CardRequest request) {
         TeamAlbum teamAlbum = teamAlbumRepository.findById(teamAlbumId)
                 .orElseThrow(() -> new UserException(UserErrorCode.NOT_EXITSTS_TEAM));
@@ -59,13 +62,15 @@ public class TeamAlbumCardServiceImpl implements TeamAlbumCardService {
                     .businesscard(businesscard)
                     .memo(null)
                     .build();
-            addCardToTeamAlbumDetail(teamAlbumDetailRequest);
+            addCardToTeamAlbumDetail(teamAlbumDetailRequest,teamAlbumId);
         }
     }
 
     // 팀 명함지갑에 OCR로 명함 등록
     @Override
     @Transactional
+    @CacheEvict(value = "teamAlbumCache", key = "#teamAlbumId")
+
     public void registCard(Long userId, Long teamAlbumId, MultipartFile image, CardRequest request) {
         TeamAlbum teamAlbum = teamAlbumRepository.findById(teamAlbumId)
                 .orElseThrow(() -> new UserException(UserErrorCode.NOT_EXITSTS_TEAM));
@@ -81,7 +86,8 @@ public class TeamAlbumCardServiceImpl implements TeamAlbumCardService {
                     .teamAlbum(teamAlbum)
                     .businesscard(businesscard)
                     .build();
-            addCardToTeamAlbumDetail(teamAlbumDetailRequest);
+
+            addCardToTeamAlbumDetail(teamAlbumDetailRequest,teamAlbumDetailRequest.teamAlbum().getTeamAlbumId());
         }
     }
 
@@ -98,7 +104,8 @@ public class TeamAlbumCardServiceImpl implements TeamAlbumCardService {
     }
 
     // 팀 명함지갑에 명함 등록 로직
-    private void addCardToTeamAlbumDetail(TeamAlbumDetailRequest request) {
+    @CacheEvict(value = "teamAlbumCache", key = "#teamAlbumId")
+    public void addCardToTeamAlbumDetail(TeamAlbumDetailRequest request,Long teamAlbumId ) {
         teamAlbumDetailRepository.save(TeamAlbumDetail.builder()
                 .teamAlbum(request.teamAlbum())
                 .businesscard(request.businesscard())
@@ -108,6 +115,8 @@ public class TeamAlbumCardServiceImpl implements TeamAlbumCardService {
 
     // 팀 명함지갑에 명함 수정
     @Override
+    @CacheEvict(value = "teamAlbumCache", key = "#teamAlbumId")
+
     @Transactional
     public void updateCard(Long userId, Long teamAlbumId, Long cardId, CardRequest request) {
         TeamAlbumDetail teamAlbumDetail = teamAlbumDetailRepository.findByTeamAlbum_teamAlbumIdAndBusinesscard_CardId(
@@ -132,6 +141,8 @@ public class TeamAlbumCardServiceImpl implements TeamAlbumCardService {
 
     // 팀 명함지갑에서 명함 삭제
     @Override
+    @CacheEvict(value = "teamAlbumCache", key = "#teamAlbumId")
+
     public void deleteCard(Long userId, Long teamAlbumId, Long cardId) {
         TeamAlbumDetail teamAlbumDetail = teamAlbumDetailRepository.findByTeamAlbum_teamAlbumIdAndBusinesscard_CardId(
                 teamAlbumId, cardId
@@ -166,6 +177,8 @@ public class TeamAlbumCardServiceImpl implements TeamAlbumCardService {
 
     // 팀 명함지갑 명함에 메모 등록 및 수정
     @Override
+    @CacheEvict(value = "teamAlbumCache", key = "#teamAlbumId")
+
     public String cardMemo(Long userId, Long teamAlbumId, Long cardId, MemoRequest request) {
         TeamAlbumDetail teamAlbumDetail = teamAlbumDetailRepository.findByTeamAlbum_teamAlbumIdAndBusinesscard_CardId(
                 teamAlbumId, cardId

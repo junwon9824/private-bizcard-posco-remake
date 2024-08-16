@@ -7,6 +7,7 @@ import com.ssafy.businesscard.domain.team.service.TeamAlbumCardService;
 import com.ssafy.businesscard.global.utils.MessageUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,7 +25,7 @@ public class TeamAlbumCardController {
 
     // 팀 명함지갑에 명함 등록
     @PostMapping("/{userId}/{teamId}/card")
-    public ResponseEntity<?> regist(@PathVariable("userId") Long userId,
+     public ResponseEntity<?> regist(@PathVariable("userId") Long userId,
                                     @PathVariable("teamId") Long teamAlbumId,
                                     @RequestBody CardRequest request) {
         teamAlbumCardService.regist(userId, teamAlbumId, request);

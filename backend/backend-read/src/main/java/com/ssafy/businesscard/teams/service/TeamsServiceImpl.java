@@ -98,7 +98,7 @@ public class TeamsServiceImpl implements TeamsService {
 
     //팀 내 명함 조회
     @Override
-    @Cacheable(value = "teamAlbumCache", key = "#teamAlbumId + '-' + #page")
+    @Cacheable(value = "teamAlbumCache", key = "#teamAlbumId")
     public List<PrivateAlbumResponseDto> getTeamAlbumList(Long teamAlbumId, int page) {
         log.info("Fetching data from the database for teamAlbumId: {}, page: {}", teamAlbumId, page);
 
