@@ -43,6 +43,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
+
 public class TeamsServiceImpl implements TeamsService {
 
     private final TeamAlbumRepository teamAlbumRepository;
@@ -103,6 +104,7 @@ public class TeamsServiceImpl implements TeamsService {
         log.info("Fetching data from the database for teamAlbumId: {}, page: {}", teamAlbumId, page);
 
         int size = 12;
+        log.info("teamalbumpageeee   " );
 
         Pageable pageable = PageRequest.of(page, size, Sort.by("businesscard.cardId").descending());
         Page<TeamAlbumDetail> teamAlbumPage = teamAlbumDetailRepository.findByTeamAlbum_TeamAlbumId(teamAlbumId, pageable);
