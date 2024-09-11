@@ -21,8 +21,8 @@ public class CacheConfig {
     @Bean
     public RedisCacheManager cacheManager(RedisConnectionFactory redisConnectionFactory) {
         // ObjectMapper 설정
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+//        ObjectMapper objectMapper = new ObjectMapper();
+//        objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
 
         // Jackson2JsonRedisSerializer 사용
         Jackson2JsonRedisSerializer<Object> serializer = new Jackson2JsonRedisSerializer<>(Object.class);
